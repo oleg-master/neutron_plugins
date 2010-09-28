@@ -194,22 +194,6 @@ def handler_vikt_stop(type,source,parameters):
 	if groupchat:
 		stop_vikt(groupchat)
 
-def handler_test_cmd(type,source,parameters):
-	groupchat = get_groupchat(source)
-	msg(groupchat, u'Работает1')
-	msg(groupchat, u'Работает2')
-	msg(groupchat, u'Работает3')
-	s = u'Работает4'
-	s1 = ''
-	for n in range(len(s)):
-		s1 += u'*'
-	msg(groupchat,s)
-	msg(groupchat,s1)
-
-def handler_arctic_cmd(type,source,parameters):
-	groupchat = get_groupchat(source)
-	msg(groupchat, u'Нет, ты!')
-
 def handler_quiz_message(type,source,body):
 	SysLck.acquire()
 	groupchat=get_groupchat(source)
@@ -223,9 +207,7 @@ def handler_hint(type,source,body):
 		add_hint(groupchat)
 
 register_command_handler(handler_hint,u'!подсказка',0,u'Подсказка',u'!подсказка',[u'!подсказка'])
-register_command_handler(handler_vikt_start,u'!старт',0,u'Просто проверка',u'!старт',[u'!старт'])
-register_command_handler(handler_test_cmd,u'!тест',0,u'Просто проверка',u'!тест',[u'!тест'])
-register_command_handler(handler_arctic_cmd,u'!хуй',0,u'Спецально для БМВ',u'!хуй',[u'!хуй'])
-register_command_handler(handler_vikt_stop,u'!стоп',0,u'Просто проверка',u'!стоп',[u'!стоп'])
+register_command_handler(handler_vikt_start,u'!старт',0,u'Запуск викторины',u'!старт',[u'!старт'])
+register_command_handler(handler_vikt_stop,u'!стоп',0,u'Остановка викторины',u'!стоп',[u'!стоп'])
 
 register_message_handler(handler_quiz_message)

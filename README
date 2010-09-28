@@ -1,1 +1,8 @@
 plugins set for neutron jabber bot
+
+new_plugin.py contains quiz plugin adapted to russian.
+questions.txt contain question set in UTF-8 encoding
+and formatted as:
+"question|answer"
+TOTAL_LINES constant in plugin need to set in lines count
+in questions.txt file before use this plugin
