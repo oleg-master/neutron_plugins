@@ -6,6 +6,14 @@
 # only if there was '*' at the end of string (parameter). Be good. Don't play with it. Or!
 # If there's no '*' to the right (i.e. at the end of string), !seen will do exact match.
 # For regexp !seen there would be !sin command, which be implemented later... (Implemented as !reseen)
+# !reseen command allow any regexp, except '.*', maybe even '..*' should do...
+#
+# TODO:
+# Limit search result by certain number; show most recent
+# Restrict regexp somehow... Or not...
+# This behavior should be nice:
+# I found 15 matches to your query.  Here are the 5 most recent (sorted): wasd22 wasd wasd23 wasd32 wasd33. wasd (wasd31@178.187.x.x) was last seen joining #channel 1 hour, 59 minutes ago. wasd is still on #channel.
+# Kak-to tak
 
 import re
 from datetime import datetime
