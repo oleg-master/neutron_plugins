@@ -2,6 +2,8 @@
 # --*-- encoding: utf-8 --*--
 import re
 from datetime import datetime
+import pickle
+from os import path
 
 MSG_ITS_ME = u'A po4emu vi sprashivaete?'
 MSG_NOW_ONLINE = u'Ya ego vizhu! O_O'
@@ -14,15 +16,16 @@ SEEN = {}
 
 SeenLck = threading.Lock()
 
-SeenLck.acquire()
-fp=file(SEEN_FILENAME,'r')
-lines = fp.readlines()
-for line in lines:
-	line=line.strip()
-	(nick,date)=line.split(' ', 1)
-	SEEN[nick] = date
-fp.close()
-SeenLck.release()
+
+if os.path.isfile(SEEN_FILENAME):
+	SeenLck.acquire()
+	fp=file(SEEN_FILENAME,'rb')
+	try:
+		SEEN = pickle.load(fp)
+	except	(pickle.UnpicklingError, AttributeError, EOFError, ImportError, IndexError):
+		SEEN = {}
+	fp.close()
+	SeenLck.release()
 
 
 def handler_seen(type,source,parameters):
@@ -56,10 +59,8 @@ def handler_leave_seen(groupchat, nick):
 	SEEN[nick]=datetime.now().isoformat(' ')
 	seennick = ' '.join([nick,SEEN[nick]])
 
-	fp=file(SEEN_FILENAME,'w')
-	for nick in SEEN:
-		seennick = ' '.join([nick,SEEN[nick]])
-		fp.write(seennick+'\n')
+	fp=file(SEEN_FILENAME,'wb')
+	pickle.dump(SEEN, fp)
 	fp.close()
 
 	SeenLck.release()
