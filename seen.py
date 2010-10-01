@@ -5,7 +5,8 @@
 # until first '*' occured. Any number of '*' to the left end and to the right end of string would be deleted then, and
 # only if there was '*' at the end of string (parameter). Be good. Don't play with it. Or!
 # If there's no '*' to the right (i.e. at the end of string), !seen will do exact match.
-# For regexp !seen there would be !sin command, which be implemented later...
+# For regexp !seen there would be !sin command, which be implemented later... (Implemented as !reseen)
+
 import re
 from datetime import datetime
 import pickle
@@ -78,6 +79,35 @@ def handler_seen(type,source,parameters):
 		else:
 			msg(groupchat, MSG_NEVER_SEEN)
 
+def handler_reseen(type,source,parameters):
+	groupchat = get_groupchat(source)
+	if not groupchat:
+		return
+
+	seekfor = (parameters.split())[0].strip()
+
+	if not seekfor:
+		msg(groupchat, MSG_NO_PARAMETER_GIVEN)
+		return
+
+	if re.match('^'+MY_NICK+'$', seekfor):
+		msg(groupchat, MSG_ITS_ME)
+	elif re.match('^\.\*$', seekfor):
+		msg(groupchat, MSG_KGB_DETECTED)
+	else:
+		expr = re.compile(seekfor)
+		found = 0
+		for nick in SEEN:
+			if expr.search(nick):
+				msg(groupchat,MSG_WAS_SEEN+nick+' '+SEEN[nick])
+				found += 1
+		for nick in GROUPCHATS[groupchat]:
+			if expr.search(nick):
+				msg(groupchat, MSG_NOW_ONLINE+' '+nick)
+				found += 1
+		if found == 0:
+			msg(groupchat, MSG_NEVER_SEEN)
+
 
 def handler_leave_seen(groupchat, nick):
 	SeenLck.acquire()
@@ -93,4 +123,5 @@ def handler_leave_seen(groupchat, nick):
 
 
 register_command_handler(handler_seen,u'!seen',0,u'seen',u'!seen',[u'!seen'])
+register_command_handler(handler_reseen,u'!reseen',0,u'reseen',u'!reseen',[u'!seen'])
 register_leave_handler(handler_leave_seen)
