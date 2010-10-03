@@ -1,20 +1,11 @@
 #$ neutron_plugin 01
 # --*-- encoding: utf-8 --*--
 # !seen command takes as parameter (nick) first sequence of non-whitespace chars, until first whitespace char occured
-# If there's '*' (asterisk) at the end of parameter, then it will search any nick starting with what parameter starting
-# until first '*' occured. Any number of '*' to the left end and to the right end of string would be deleted then, and
-# only if there was '*' at the end of string (parameter). Be good. Don't play with it. Or!
-# If there's no '*' to the right (i.e. at the end of string), !seen will do exact match.
-# For regexp !seen there would be !sin command, which be implemented later... (Implemented as !reseen)
-# !reseen command allow any regexp, except '.*', maybe even '..*' should do...
+# now, regexp only, but!
 #
 # TODO:
-# Limit search result by certain number; show most recent
-# Restrict regexp somehow... Or not...
-# This behavior should be nice:
-# I found 15 matches to your query.  Here are the 5 most recent (sorted): wasd22 wasd wasd23 wasd32 wasd33. wasd (wasd31@178.187.x.x) was last seen joining #channel 1 hour, 59 minutes ago. wasd is still on #channel.
-# Kak-to tak
-
+# Return 'already on channels' check
+#
 import re
 from datetime import datetime
 import pickle
@@ -27,11 +18,16 @@ MSG_NO_PARAMETER_GIVEN = u'Kakie vashi dokazatelstva?!'
 MSG_WAS_SEEN = u'Byl zame4en '
 MSG_KGB_DETECTED = u'A ne mnogo li na sebya beryote?'
 
+seen_join='J'
+seen_leave='L'
+
 # This should be acquired elsehow...
 MY_NICK = 'wasd22'
 
 SEEN_FILENAME = 'static/seen.txt'
 SEEN = {}
+seenlist = []
+maxfind = 5
 
 SeenLck = threading.Lock()
 
@@ -40,88 +36,66 @@ if os.path.isfile(SEEN_FILENAME):
 	SeenLck.acquire()
 	fp=file(SEEN_FILENAME,'rb')
 	try:
-		SEEN = pickle.load(fp)
-	# Here to be added more kosher exceptions, because it is nowhere complete list
-	except	(pickle.UnpicklingError, AttributeError, EOFError, ImportError, IndexError):
+		(SEEN, seenlist) = pickle.load(fp)
+	except	(pickle.UnpicklingError, AttributeError, EOFError, ImportError, IndexError, ValueError):
 		SEEN = {}
 	fp.close()
 	SeenLck.release()
 
+def seen_new(nick, flag):
+	SEEN[nick]=(datetime.now(), flag)
+	while seenlist.count(nick):
+		seenlist.remove(nick)
+	seenlist.insert(0, nick)
 
-def handler_seen(type,source,parameters):
-	groupchat = get_groupchat(source)
-	if not groupchat:
-		return
 
-	seekfor = (parameters.split())[0].strip()
+def show_seen(groupchat, nick):
+	if SEEN[nick][1] == seen_join:
+		msg(groupchat, "%s was joining %s" % (nick, SEEN[nick][0].isoformat(' ')))
+	elif SEEN[nick][1] == seen_leave:
+		msg(groupchat, "%s was leaving %s" % (nick, SEEN[nick][0].isoformat(' ')))
 
-	if not seekfor:
-		msg(groupchat, MSG_NO_PARAMETER_GIVEN)
-		return
-
-	if re.match('^'+MY_NICK+'$', seekfor):
-		msg(groupchat, MSG_ITS_ME)
-	elif re.match('^\*$', seekfor):
-		msg(groupchat, MSG_KGB_DETECTED)
-	elif re.match('^.*\*$', seekfor):
-		expr = re.compile('^'+seekfor.strip('*')+'.*')
-		found = 0
-		for nick in SEEN:
-			if expr.search(nick):
-				msg(groupchat,MSG_WAS_SEEN+nick+' '+SEEN[nick])
-				found += 1
-		for nick in GROUPCHATS[groupchat]:
-			if expr.search(nick):
-				msg(groupchat, MSG_NOW_ONLINE+' '+nick)
-				# Following match may be deleted at your whim
-				if re.match('^'+MY_NICK+'$', nick):
-					msg(groupchat, MSG_ITS_ME)
-				found += 1
-		if found == 0:
-			msg(groupchat, MSG_NEVER_SEEN)
-	else:
-		if GROUPCHATS[groupchat].has_key(seekfor):
-			msg(groupchat, MSG_NOW_ONLINE+' '+seekfor)
-		elif SEEN.has_key(seekfor):
-			msg(groupchat,MSG_WAS_SEEN+seekfor+' '+SEEN[seekfor])
-		else:
-			msg(groupchat, MSG_NEVER_SEEN)
 
 def handler_reseen(type,source,parameters):
 	groupchat = get_groupchat(source)
 	if not groupchat:
 		return
 
-	seekfor = (parameters.split())[0].strip()
-
-	if not seekfor:
+	if not parameters:
 		msg(groupchat, MSG_NO_PARAMETER_GIVEN)
 		return
 
-	if re.match('^'+MY_NICK+'$', seekfor):
-		msg(groupchat, MSG_ITS_ME)
-	elif re.match('^\.\*$', seekfor):
-		msg(groupchat, MSG_KGB_DETECTED)
+	seekfor = (parameters.split())[0].strip()
+	expr = re.compile(seekfor)
+	found = []
+	cnt = 0
+	for nick in seenlist:
+		if expr.match(nick):
+			found.append(nick)
+			cnt+=1
+
+	if cnt:
+		nicks = ''
+		if cnt == 1:
+			show_seen(groupchat, found[0])
+		elif cnt <= maxfind:
+			for i in range(0, cnt):
+				nicks+=found[i]+' '
+			msg(groupchat, "I found %d matches to your query (sorted): %s" % (cnt, nicks))
+			show_seen(groupchat, found[0])
+		else:
+			for i in range(0, maxfind):
+				nicks+=found[i]+' '
+			msg(groupchat, "I found %d matches to your query, here %d most recent (sorted): %s" % (cnt, maxfind, nicks))
+			show_seen(groupchat, found[0])
 	else:
-		expr = re.compile(seekfor)
-		found = 0
-		for nick in SEEN:
-			if expr.search(nick):
-				msg(groupchat,MSG_WAS_SEEN+nick+' '+SEEN[nick])
-				found += 1
-		for nick in GROUPCHATS[groupchat]:
-			if expr.search(nick):
-				msg(groupchat, MSG_NOW_ONLINE+' '+nick)
-				found += 1
-		if found == 0:
-			msg(groupchat, MSG_NEVER_SEEN)
+		msg(groupchat, MSG_NEVER_SEEN)
 
 
 def handler_leave_seen(groupchat, nick):
 	SeenLck.acquire()
 
-	SEEN[nick]=datetime.now().isoformat(' ')
-	seennick = ' '.join([nick,SEEN[nick]])
+	seen_new(nick, seen_leave)
 
 	fp=file(SEEN_FILENAME,'wb')
 	pickle.dump(SEEN, fp)
@@ -130,6 +104,19 @@ def handler_leave_seen(groupchat, nick):
 	SeenLck.release()
 
 
-register_command_handler(handler_seen,u'!seen',0,u'seen',u'!seen',[u'!seen'])
-register_command_handler(handler_reseen,u'!reseen',0,u'reseen',u'!reseen',[u'!seen'])
+def handler_join_seen(groupchat, nick):
+	SeenLck.acquire()
+
+	seen_new(nick, seen_join)
+
+	fp=file(SEEN_FILENAME,'wb')
+	pickle.dump((SEEN, seenlist), fp)
+	fp.close()
+
+	SeenLck.release()
+
+
+register_command_handler(handler_reseen,u'!seen',0,u'seen',u'!seen',[u'!seen'])
+#register_command_handler(handler_reseen,u'!reseen',0,u'reseen',u'!reseen',[u'!seen'])
 register_leave_handler(handler_leave_seen)
+register_join_handler(handler_join_seen)
