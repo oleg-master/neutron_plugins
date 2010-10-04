@@ -16,14 +16,18 @@ SysLck=threading.Lock()
 
 def timer_th(groupchat,id):
 	time.sleep(HINT_INTERVAL)
+	SysLck.acquire()
 	if not VICTORINA.has_key(groupchat):
+		SysLck.release()
 		return
 	VICTORINA[groupchat]['timer_lck'].acquire()
 	if not VICTORINA[groupchat].has_key('cur_id'):
 		VICTORINA[groupchat]['timer_lck'].release()
+		SysLck.release()
 		return
 	if not id == VICTORINA[groupchat]['cur_id']:
 		VICTORINA[groupchat]['timer_lck'].release()
+		SysLck.release()
 	 	return
 	if VICTORINA[groupchat]['hint_count']<MAX_HINTCOUNT:
 	 	VICTORINA[groupchat]['hint_count']+=1
@@ -36,6 +40,7 @@ def timer_th(groupchat,id):
 		msg(groupchat,u'Подсказка: (*) '+hint)
 		thread.start_new(timer_th,(groupchat,id))
 		VICTORINA[groupchat]['timer_lck'].release()
+		SysLck.release()
 		return
 	VICTORINA[groupchat]['hint_count']=0
 	msg(groupchat,u'(*) Время вышло. Правильный ответ был: '+VICTORINA[groupchat]['answer'])
@@ -43,10 +48,12 @@ def timer_th(groupchat,id):
 	if VICTORINA[groupchat]['reply_count']<MAX_REPLY:
 		ask_question(groupchat)
 		VICTORINA[groupchat]['timer_lck'].release()
+		SysLck.release()
 		return
 	msg(groupchat,u'(*) Слишком долго молчали. Кончилась викторина. Для нового этапа пишите !старт')
 	list_scores(groupchat)
 	VICTORINA[groupchat]['timer_lck'].release()
+	SysLck.release()
 	stop_vikt(groupchat)
 	
 def new_question():
@@ -181,6 +188,7 @@ def handler_vikt_start(type,source,parameters):
 	return
 
 def stop_vikt(groupchat):
+	SysLck.acquire()
 	if VICTORINA.has_key(groupchat):
 		del(VICTORINA[groupchat]['timer_lck'])
 		del(VICTORINA[groupchat]['ask_time'])
@@ -188,6 +196,7 @@ def stop_vikt(groupchat):
 		del(VICTORINA[groupchat]['answer'])
 		del(VICTORINA[groupchat])
 		del(SCORES[groupchat])
+	SysLck.release()
 
 def handler_vikt_stop(type,source,parameters):
 	groupchat=get_groupchat(source)
