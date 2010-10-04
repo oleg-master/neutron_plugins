@@ -13,12 +13,12 @@ from datetime import datetime
 import pickle
 from os import path
 
-MSG_ITS_ME = u'A po4emu vi sprashivaete?'
-MSG_NOW_ONLINE = u'Ya ego vizhu! O_O'
-MSG_NEVER_SEEN = u'Kto eto?'
-MSG_NO_PARAMETER_GIVEN = u'Kakie vashi dokazatelstva?!'
-MSG_WAS_SEEN = u'Byl zame4en '
-MSG_KGB_DETECTED = u'A ne mnogo li na sebya beryote?'
+MSG_ITS_ME = u'А поцчему ви спrашиваете?'
+MSG_NOW_ONLINE = u'Я его вижу! O_O'
+MSG_NEVER_SEEN = u'Кто это?'
+MSG_NO_PARAMETER_GIVEN = u'Какие ваши доказательства¿¡'
+MSG_WAS_SEEN = u'Был замечен '
+MSG_KGB_DETECTED = u'А не много ли на себя берёте?'
 
 seen_join='J'
 seen_leave='L'
@@ -41,6 +41,7 @@ if os.path.isfile(SEEN_FILENAME):
 		(SEEN, seenlist) = pickle.load(fp)
 	except	(pickle.UnpicklingError, AttributeError, EOFError, ImportError, IndexError, ValueError):
 		SEEN = {}
+	# may be need ':' after except?
 	fp.close()
 	SeenLck.release()
 
