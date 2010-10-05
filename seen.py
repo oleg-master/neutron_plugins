@@ -4,21 +4,16 @@
 # now, regexp only, but!
 #
 # TODO:
-# There's too much identical code around. It should be eleminated somehow...
+#
 # Do something to allow exact match right away?
 # Kak eto putet po ruski?
-# Get correct bot-own nick correct way
+# Get correct bot-own nick correct way. This is MY_NICK variable that should be set to.
+# Comment code a bit
+
 import re
 from datetime import datetime
 import pickle
 from os import path
-
-MSG_ITS_ME = u'А поцчему ви спrашиваете?'
-MSG_NOW_ONLINE = u'Я его вижу! O_O'
-MSG_NEVER_SEEN = u'Кто это?'
-MSG_NO_PARAMETER_GIVEN = u'Какие ваши доказательства¿¡'
-MSG_WAS_SEEN = u'Был замечен '
-MSG_KGB_DETECTED = u'А не много ли на себя берёте?'
 
 seen_join='J'
 seen_leave='L'
@@ -41,9 +36,9 @@ if os.path.isfile(SEEN_FILENAME):
 		(SEEN, seenlist) = pickle.load(fp)
 	except	(pickle.UnpicklingError, AttributeError, EOFError, ImportError, IndexError, ValueError):
 		SEEN = {}
-	# may be need ':' after except?
 	fp.close()
 	SeenLck.release()
+
 
 def seen_new(nick, flag):
 	SEEN[nick]=(datetime.now(), flag)
@@ -76,43 +71,35 @@ def handler_reseen(type,source,parameters):
 		return
 
 	seekfor = (parameters.split())[0].strip()
-	expr = re.compile(seekfor, re.IGNORECASE)
+	expr = re.compile(seekfor, re.IGNORECASE|re.UNICODE)
+
+# Here you may or may not check for exact match.
+
 	found = []
 	cnt = 0
-	
-# This code won't work... Yet maybe here is the place to check for the exact match
-#	if GROUPCHATS[groupchat].has_key[seekfor]:
-#		msg(groupchat, "%s is right here!" % seekfor)
-#		return
-#	elif SEEN.has_key[seekfor]:
-#		show_seen(groupchat, seekfor)
-#		return
-	
 	for nick in seenlist:
 		if expr.match(nick):
 			found.append(nick)
 			cnt+=1
 
 	if cnt:
-		nicks = ''
 		if cnt == 1:
-			result = "%s: " % querast + show_seen(groupchat, found[0])
-			msg(groupchat, result)
-		# Identical code follows. Beware!
-		elif cnt <= maxfind:
-			for i in range(0, cnt):
-				nicks+=found[i]+' '
-			nicks.strip()
-			result="%s: I found %d matches to your query (sorted): %s" % (querast, cnt, nicks) + '. ' + show_seen(groupchat, found[0])
-			msg(groupchat, result)
+			result = "%s: " % querast
 		else:
-			for i in range(0, maxfind):
+			nicks = ''
+			if cnt <= maxfind:
+				r = cnt
+				result="%s: I found %d matches to your query (sorted): " % (querast, cnt)
+			else:
+				r = maxfind
+				result="%s: I found %d matches to your query, here %d most recent (sorted): " % (querast, cnt, maxfind)
+			for i in range(0, r):
 				nicks+=found[i]+' '
 			nicks.strip()
-			result="%s: I found %d matches to your query, here %d most recent (sorted): %s" % (querast, cnt, maxfind, nicks) + '. ' + show_seen(groupchat, found[0])
-			msg(groupchat, result)
-	else:
-		msg(groupchat, MSG_NEVER_SEEN)
+			result += "%s" % nicks + '. '
+
+		result += show_seen(groupchat, found[0])
+		msg(groupchat, result)
 
 
 def handler_leave_seen(groupchat, nick):
@@ -140,7 +127,5 @@ def handler_join_seen(groupchat, nick):
 
 
 register_command_handler(handler_reseen,u'!seen',0,u'seen',u'!seen',[u'!seen'])
-#register_command_handler(handler_reseen,u'!gesehen',0,u'gesehen',u'!gesehen',[u'!gesehen'])
-#register_command_handler(handler_reseen,u'!reseen',0,u'reseen',u'!reseen',[u'!seen'])
 register_leave_handler(handler_leave_seen)
 register_join_handler(handler_join_seen)
