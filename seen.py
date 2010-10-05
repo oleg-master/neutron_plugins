@@ -50,13 +50,13 @@ def seen_new(nick, flag):
 def show_seen(groupchat, nick):
 	result = ''
 	if SEEN[nick][1] == seen_join:
-		result = "%s was joining %s" % (nick, SEEN[nick][0].isoformat(' '))
+		result = u'%s заходил %s' % (nick, SEEN[nick][0].isoformat(' '))
 	elif SEEN[nick][1] == seen_leave:
-		result = "%s was leaving %s" % (nick, SEEN[nick][0].isoformat(' '))
+		result = u'%s ушёл %s' % (nick, SEEN[nick][0].isoformat(' '))
 	else:
-		result = "%s was something %s" % (nick, SEEN[nick][0].isoformat(' '))
+		result = u'%s чего-то делал %s' % (nick, SEEN[nick][0].isoformat(' '))
 	if GROUPCHATS[groupchat].has_key(nick):
-		result += ". %s still here." % nick
+		result += u'. %s всё ещё здесь.' % nick
 	return result
 
 
@@ -89,10 +89,10 @@ def handler_reseen(type,source,parameters):
 			nicks = ''
 			if cnt <= maxfind:
 				r = cnt
-				result="%s: I found %d matches to your query (sorted): " % (querast, cnt)
+				result=u'%s: Найдено %d совпадений с запросом (отсортировано): ' % (querast, cnt)
 			else:
 				r = maxfind
-				result="%s: I found %d matches to your query, here %d most recent (sorted): " % (querast, cnt, maxfind)
+				result=u'%s: Найдено %d совпадений с запросом, %d наиболее свежих (отсортировано): ' % (querast, cnt, maxfind)
 			for i in range(0, r):
 				nicks+=found[i]+' '
 			nicks.strip()
