@@ -18,6 +18,9 @@ from os import path
 seen_join='J'
 seen_leave='L'
 
+MSG_NO_PARAMETER_GIVEN='Kakie vashi dokazatelstva?!'
+MSG_NEVER_SEEN='Kto eto?'
+
 # This should be acquired elsehow...
 MY_NICK = 'wasd22'
 
@@ -100,6 +103,8 @@ def handler_reseen(type,source,parameters):
 
 		result += show_seen(groupchat, found[0])
 		msg(groupchat, result)
+	else:
+		msg(groupchat, MSG_NEVER_SEEN)
 
 
 def handler_leave_seen(groupchat, nick):
