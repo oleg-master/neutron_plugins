@@ -9,7 +9,7 @@ QUEST_FILE = 'static/questions.txt'
 RECURSIVE_MAX = 20
 VICTORINA = {}
 SCORES = {}
-FILE_SCORE = 'static/scores.txt'
+FILE_SCORE = 'dynamic/scores.txt'
 
 ScoreLck=threading.Lock()
 SysLck=threading.Lock()
