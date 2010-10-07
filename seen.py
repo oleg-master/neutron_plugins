@@ -18,8 +18,8 @@ from os import path
 seen_join='J'
 seen_leave='L'
 
-MSG_NO_PARAMETER_GIVEN='Kakie vashi dokazatelstva?!'
-MSG_NEVER_SEEN='Kto eto?'
+MSG_NO_PARAMETER_GIVEN=u'Какие Ваши доказательства¿'
+MSG_NEVER_SEEN='Кто это¿'
 
 # This should be acquired elsehow...
 MY_NICK = 'wasd22'
