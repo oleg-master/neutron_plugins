@@ -27,7 +27,7 @@ MY_NICK = 'wasd22'
 SEEN_FILENAME = 'static/seen.txt'
 SEEN = {}
 seenlist = []
-maxfind = 5
+MAXFIND = 5
 
 SeenLck = threading.Lock()
 
@@ -78,33 +78,25 @@ def handler_reseen(type,source,parameters):
 
 # Here you may or may not check for exact match.
 
-	found = []
-	cnt = 0
-	for nick in seenlist:
-		if expr.match(nick):
-			found.append(nick)
-			cnt+=1
+	found = [nick for nick in seenlist if expr.match(nick)]
+	cnt = len(found)
 
 	if cnt:
 		if cnt == 1:
 			result = "%s: " % querast
 		else:
-			nicks = ''
-			if cnt <= maxfind:
-				r = cnt
+			if cnt <= MAXFIND:
 				result=u'%s: Найдено %d совпадений с запросом (отсортировано): ' % (querast, cnt)
 			else:
-				r = maxfind
 				result=u'%s: Найдено %d совпадений с запросом, %d наиболее свежих (отсортировано): ' % (querast, cnt, maxfind)
-			for i in range(0, r):
-				nicks+=found[i]+' '
-			nicks.strip()
+			nicks = ' '.join(found[1..MAXFIND])
 			result += "%s" % nicks + '. '
 
 		result += show_seen(groupchat, found[0])
-		msg(groupchat, result)
 	else:
-		msg(groupchat, MSG_NEVER_SEEN)
+		result = MSG_NEVER_SEEN
+
+	msg(groupchat, result)
 
 
 def handler_leave_seen(groupchat, nick):
