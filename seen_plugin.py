@@ -9,6 +9,7 @@
 # Kak eto putet po ruski?
 # Get correct bot-own nick correct way. This is MY_NICK variable that should be set to.
 # Comment code a bit
+# new comment
 
 import re
 from datetime import datetime
